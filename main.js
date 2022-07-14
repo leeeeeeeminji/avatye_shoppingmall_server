@@ -44,8 +44,8 @@ app.post("/api/login", (req, res) => {
                         throw err
                     }
                     if(rows.length) {
-                        //로그인 성공
-                        res.json("드디어 로그인 성공")
+                        //로그인 성공 - 페이지 이동되게 수정
+                        res.json("로그인 성공")
                     } else{
                         //비밀번호 오류
                         res.json("비밀번호가 틀립니다.")
@@ -55,6 +55,20 @@ app.post("/api/login", (req, res) => {
         } else {
             //아이디 없음
             res.json("아이디가 존재하지 않습니다.")
+        }
+    })
+});
+
+//아이디 중복 확인
+app.post("/api/idcheck", (req, res) => {
+    const id = req.body.checkid;
+    db.query("SELECT * FROM customer WHERE cusID = ?", id, (err, rows) => {
+        if(rows.length) {
+            if (rows[0].cusID == id ) {
+                res.send("중복된 아이디 입니다.")
+            }
+        } else {
+            res.json("사용 가능한 아이디입니다.")
         }
     })
 });
@@ -76,6 +90,15 @@ app.get("/api/list", (req,res) => {
         res.send(result)
     })
 })
+
+//상품 상세
+app.post("/api/detail", (req, res) => {
+    const id = req.body.productID;
+    db.query("SELECT * FROM product WHERE productID = ?", id, (err, result) => {
+        res.send(result)
+    })
+})
+
 
 app.listen(port, () => {
     console.log(`running on port ${port}`);
