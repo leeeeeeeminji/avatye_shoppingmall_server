@@ -44,7 +44,7 @@ app.post("/api/login", (req, res) => {
                         throw err
                     }
                     if(rows.length) {
-                        //로그인 성공 - 페이지 이동되게 수정
+                        //로그인 성공, 세션해야됨
                         res.json("로그인 성공")
                     } else{
                         //비밀번호 오류
@@ -76,7 +76,7 @@ app.post("/api/idcheck", (req, res) => {
 
 //상품검색
 app.post("/api/search", (req,res) => {
-    const item = req.body.searchItem
+    const item = req.body.item
     const listQuery = `SELECT * FROM product WHERE productName LIKE '%${item}%'`
     db.query(listQuery, (err, result) => {
         res.send(result)
@@ -91,7 +91,7 @@ app.get("/api/list", (req,res) => {
     })
 })
 
-//상품 상세
+//상품 상세, 주문에서도 똑같이 사용
 app.post("/api/detail", (req, res) => {
     const id = req.body.productID;
     db.query("SELECT * FROM product WHERE productID = ?", id, (err, result) => {
