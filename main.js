@@ -1,15 +1,41 @@
 const express = require('express')
+const port = 3001
+const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const app = express()
-const port = 3001
 
-//connect.js에 저장된 연결정보 불러오기
+//connect.js의 연결 정보 불러오기
 const db = require('./connect.js')
 
 app.use(cors())
 app.use(express.json())
 app.use(bodyParser.urlencoded({extended : true}))
+
+//session
+const session = require('express-session')
+const MySQLStore = require('express-mysql-session')(session);
+
+app.use(cors({
+    origin :true,
+    credentials : true
+}))
+app.use(
+    session({
+        key : "loginData",
+        secret : "testSecret",
+        resave : false,
+        saveUninitialized : true,
+        store : new MySQLStore({
+            host : 'localhost',
+            user : 'root',
+            password : '',
+            database : 'shoppingmall'
+        }),
+        cookie : {
+            expires : 1*60*60*1000
+        }
+    })
+);
 
 //회원가입 하기
 app.post("/api/join", (req, res) => {
@@ -45,23 +71,25 @@ app.post("/api/login", (req, res) => {
                     }
                     if(rows.length) {
                         //로그인 성공, 세션해야됨
-                        res.json("로그인 성공")
+                        req.session.loginData = [id, pw];
+                        console.log(req.session);
+                        res.redirect("/")
                     } else{
                         //비밀번호 오류
-                        res.json("비밀번호가 틀립니다.")
+                        res.send("비밀번호가 틀렸습니다.");
                     }
                 })
             }
         } else {
             //아이디 없음
-            res.json("아이디가 존재하지 않습니다.")
+            res.send("아이디가 존재하지 않습니다.");
         }
     })
 });
 
 //아이디 중복 확인
-app.post("/api/idcheck", (req, res) => {
-    const id = req.body.checkid;
+app.get("/api/idcheck", (req, res) => {
+    const id = req.query.checkid;
     db.query("SELECT * FROM customer WHERE cusID = ?", id, (err, rows) => {
         if(rows.length) {
             if (rows[0].cusID == id ) {
@@ -75,8 +103,9 @@ app.post("/api/idcheck", (req, res) => {
 
 
 //상품검색
-app.post("/api/search", (req,res) => {
-    const item = req.body.item
+app.get("/api/search", (req,res) => {
+    console.log(req.session.loginData)
+    const item = req.query.item
     const listQuery = `SELECT * FROM product WHERE productName LIKE '%${item}%'`
     db.query(listQuery, (err, result) => {
         res.send(result)
@@ -92,12 +121,16 @@ app.get("/api/list", (req,res) => {
 })
 
 //상품 상세, 주문에서도 똑같이 사용
-app.post("/api/detail", (req, res) => {
-    const id = req.body.productID;
+app.get("/api/detail", (req, res) => {
+    const id = req.query.productID;
     db.query("SELECT * FROM product WHERE productID = ?", id, (err, result) => {
         res.send(result)
     })
 })
+
+app.get('/', function(req, res){
+    res.send('Hello World');
+});
 
 
 app.listen(port, () => {
