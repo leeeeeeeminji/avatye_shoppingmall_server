@@ -3,39 +3,16 @@ const port = 3001
 const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
+const secret = require('./jwt.js')
 
 //connect.js의 연결 정보 불러오기
 const db = require('./connect.js')
 
+
 app.use(cors())
 app.use(express.json())
 app.use(bodyParser.urlencoded({extended : true}))
-
-//session
-const session = require('express-session')
-const MySQLStore = require('express-mysql-session')(session);
-
-app.use(cors({
-    origin :true,
-    credentials : true
-}))
-app.use(
-    session({
-        key : "loginData",
-        secret : "testSecret",
-        resave : false,
-        saveUninitialized : true,
-        store : new MySQLStore({
-            host : 'localhost',
-            user : 'root',
-            password : '',
-            database : 'shoppingmall'
-        }),
-        cookie : {
-            expires : 1*60*60*1000
-        }
-    })
-);
 
 //회원가입 하기
 app.post("/api/join", (req, res) => {
@@ -57,6 +34,7 @@ app.post("/api/join", (req, res) => {
 app.post("/api/login", (req, res) => {
     const id = req.body.cusID
     const pw = req.body.cusPW
+    let loginCheck = ''
 
     //입력된 id와 동일한 id 가 db에 있는지 확인
     const idQuery = "SELECT * FROM customer WHERE cusID = ?"
@@ -64,25 +42,37 @@ app.post("/api/login", (req, res) => {
         if(rows.length) {
             if (rows[0].cusID == id ) {
                 //id가 존재할 경우, 비밀번호 확인
-                const pwQuery = "SELECT * FROM customer WHERE cusPassword = ?"
-                db.query(pwQuery, pw, (err, rows) => {
+                const pwQuery = "SELECT * FROM customer WHERE cusID = ? and cusPassword = ?"
+                db.query(pwQuery, [id, pw] , (err, rows) => {
                     if (err){
                         throw err
                     }
                     if(rows.length) {
-                        //로그인 성공, 세션해야됨
-                        req.session.loginData = [id, pw];
-                        console.log(req.session);
-                        res.redirect("/")
+                        //로그인 성공
+                        //JWT sign()로 토큰 생성
+                        let token = jwt.sign({
+                            userid : id
+                        }, secret.secret, 
+                        {
+                            expiresIn : '5m'
+                        })
+                        //쿠키에 토큰값 저장
+                        res.cookie("user", token);
+                        res.json({
+                            token : token,
+                            userid : id
+                        })
                     } else{
                         //비밀번호 오류
-                        res.send("비밀번호가 틀렸습니다.");
+                        loginCheck = 'wrongPW'
+                        res.send(loginCheck)
                     }
                 })
             }
         } else {
             //아이디 없음
-            res.send("아이디가 존재하지 않습니다.");
+            loginCheck = 'noID'
+            res.send(loginCheck)
         }
     })
 });
