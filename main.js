@@ -109,25 +109,62 @@ app.get("/api/list", (req,res) => {
     })
 })
 
-//상품 상세, 주문에서도 똑같이 사용
+//상품 상세
 app.get("/api/detail", (req, res) => {
     const id = req.query.productID;
     db.query("SELECT * FROM product WHERE productID = ?", id, (err, result) => {
-        //(select productID from cart)
         res.send(result)
     })
 })
+
+//원래 주문
+// app.get("/api/order", (req, res) => {
+//     const id = req.query.productID;
+//     db.query("SELECT * FROM product WHERE productID in (" + id.toString() + ")", (err, result) => {
+//         res.send(result)
+//     })
+// });
+
+//주문 - 디테일에서 들어온 경우 (detailorder)
+app.get("/api/detailorder", (req, res) => {
+    const id = req.query.productID;
+    db.query("SELECT * FROM product WHERE productID = ?", id, (err, result) => {
+        res.send(result)
+    })
+});
+
+//주문 - 장바구니에서 들어온 경우 (cartorder)
+app.get("/api/cartorder", (req, res) => {
+    const id = req.query.userid;
+    db.query("SELECT * FROM cart WHERE userid = ?", id, (err, result) => {
+        res.send(result)
+    })
+});
 
 
 //장바구니 넣기
 app.post("/api/insertCart", (req, res) => {
     const productid = req.body.productID;
     const userid = req.body.userID;
-    const cartQuery = "INSERT INTO cart (cusID, productID) VALUES (?,?)"
-    db.query(cartQuery, [userid, productid], (err, result) => {
-        res.send(result)
-    })
-})
+    const quantity = req.body.quantity;
+    const finalPrice = req.body.finalPrice;
+    let check = true;
+
+    const checkcart = "SELECT * FROM cart WHERE cusID = ? and productID = ?"
+    db.query(checkcart, [userid, productid], (err, result) => {
+        if (err){
+            console.log("error : ", err )
+        } else if (result.length) {
+            check = false;
+            res.send(check)
+        } else {
+            const cartQuery = "INSERT INTO cart (cusID, productID, quantity, finalprice) VALUES (?,?,?,?)"
+            db.query(cartQuery, [userid, productid, quantity, finalPrice], (err, result) => {
+                res.send(check)
+            })
+        }
+    } )
+});
 
 //장바구니 불러오기
 app.get("/api/getCart", (req, res) => {
