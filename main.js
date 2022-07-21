@@ -94,7 +94,6 @@ app.get("/api/idcheck", (req, res) => {
 
 //상품검색
 app.get("/api/search", (req,res) => {
-    console.log(req.session.loginData)
     const item = req.query.item
     const listQuery = `SELECT * FROM product WHERE productName LIKE '%${item}%'`
     db.query(listQuery, (err, result) => {
@@ -114,6 +113,27 @@ app.get("/api/list", (req,res) => {
 app.get("/api/detail", (req, res) => {
     const id = req.query.productID;
     db.query("SELECT * FROM product WHERE productID = ?", id, (err, result) => {
+        //(select productID from cart)
+        res.send(result)
+    })
+})
+
+
+//장바구니 넣기
+app.post("/api/insertCart", (req, res) => {
+    const productid = req.body.productID;
+    const userid = req.body.userID;
+    const cartQuery = "INSERT INTO cart (cusID, productID) VALUES (?,?)"
+    db.query(cartQuery, [userid, productid], (err, result) => {
+        res.send(result)
+    })
+})
+
+//장바구니 불러오기
+app.get("/api/getCart", (req, res) => {
+    const userid = req.query.userid;
+    const cartQuery2 = "SELECT * FROM product p INNER JOIN cart c ON p.productID = c.productID WHERE cusID = ?"
+    db.query(cartQuery2, userid, (err, result) => {
         res.send(result)
     })
 })
