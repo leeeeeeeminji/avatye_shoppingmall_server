@@ -126,20 +126,20 @@ app.get("/api/detail", (req, res) => {
 // });
 
 //주문 - 디테일에서 들어온 경우 (detailorder)
-app.get("/api/detailorder", (req, res) => {
-    const id = req.query.productID;
-    db.query("SELECT * FROM product WHERE productID = ?", id, (err, result) => {
-        res.send(result)
-    })
-});
+// app.get("/api/detailorder", (req, res) => {
+//     const id = req.query.productID;
+//     db.query("SELECT * FROM product WHERE productID = ?", id, (err, result) => {
+//         res.send(result)
+//     })
+// });
 
 //주문 - 장바구니에서 들어온 경우 (cartorder)
-app.get("/api/cartorder", (req, res) => {
-    const id = req.query.userid;
-    db.query("SELECT * FROM cart WHERE userid = ?", id, (err, result) => {
-        res.send(result)
-    })
-});
+// app.get("/api/cartorder", (req, res) => {
+//     const id = req.query.userid;
+//     db.query("SELECT * FROM cart WHERE userid = ?", id, (err, result) => {
+//         res.send(result)
+//     })
+// });
 
 
 //장바구니 넣기
@@ -173,6 +173,26 @@ app.get("/api/getCart", (req, res) => {
     db.query(cartQuery2, userid, (err, result) => {
         res.send(result)
     })
+})
+
+//마이페이지 유저 정보 불러오기
+app.get('/api/mypage', (req, res) => {
+    const userid = req.query.userid;
+    db.query("SELECT cusID, cusName, cusEmail FROM customer WHERE cusID = ?", userid, (err, result) => {
+        res.send(result);
+    })
+})
+
+//마이페이지 정보 수정
+app.put('/api/updateInfo', (req, res) => {
+
+})
+
+//주문 내역에 넣기!!!
+app.post('api/orders', (req, res) =>{
+    const {id, adr, phone, price, proId, qty} = req.body;
+    const insert1 = "INSERT INTO order (CusID, address, phonenumber, finalprice) VALUES (?, ?, ?, ?)"
+    const insert2 = "INSERT INTO orderDetails (orderID, productID, orderQuantity) VALUES (?, ?, ?)"
 })
 
 app.get('/', function(req, res){
