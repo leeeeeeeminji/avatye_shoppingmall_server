@@ -150,6 +150,7 @@ app.post("/api/insertCart", (req, res) => {
     const finalPrice = req.body.finalPrice;
     let check = true;
 
+    //중복된 상품이 장바구니에 있는지 확인
     const checkcart = "SELECT * FROM cart WHERE cusID = ? and productID = ?"
     db.query(checkcart, [userid, productid], (err, result) => {
         if (err){
@@ -185,15 +186,76 @@ app.get('/api/mypage', (req, res) => {
 
 //마이페이지 정보 수정
 app.put('/api/updateInfo', (req, res) => {
+    const userid = req.body.cusID;
+    const cusName = req.body.cusName;
+    const cusEmail = req.body.cusEmail;
+    const updateName = "UPDATE customer SET cusName = ? WHERE cusID = ?"
+    const updateEmail = "UPDATE customer SET cusEmail = ? WHERE cusID = ?"
 
+    //이름 수정
+    if (cusEmail == undefined) {
+        db.query(updateName, [cusName, userid], (err, result) => {
+            res.send(result)
+        })
+    } else if (cusName == undefined) {
+        //이메일 수정
+        db.query(updateEmail, [cusEmail, userid], (err, result) => {
+            res.send(result)
+        })
+    }
+    
 })
 
-//주문 내역에 넣기!!!
-app.post('api/orders', (req, res) =>{
-    const {id, adr, phone, price, proId, qty} = req.body;
-    const insert1 = "INSERT INTO order (CusID, address, phonenumber, finalprice) VALUES (?, ?, ?, ?)"
+//주문 내역에 넣기
+app.post('/api/orders', (req, res) =>{
+    const {cusID, address, phone, finalPrice} = req.body;
+    const productID = req.body.productID;
+    const quantity = req.body.quantity;
+
+    const insert1 = "INSERT INTO `order` (CusID, address, phonenumber, finalPrice) VALUES (?, ?, ?, ?)"
     const insert2 = "INSERT INTO orderDetails (orderID, productID, orderQuantity) VALUES (?, ?, ?)"
+    db.query(insert1, [cusID, address, phone, finalPrice], (err, result)=> {
+        if (err){
+            console.log("error : ", err )
+        } else {
+            //여러 상품 주문할 경우
+            if (Array.isArray(productID)) {
+                for (let i = 0; i < productID.length; i++) {
+                    db.query(insert2, [result.insertId, productID[i], quantity[i]], (err, result) => {
+                        if (err) {
+                            console.log("error : ", err)
+                        }
+                    })
+                }
+                res.send(result)
+            } else {
+                //상품 하나 주문할경우
+                db.query(insert2, [result.insertId, productID, quantity], (err, result) => {
+                    if (err) {
+                        console.log("error : ", err)
+                    }
+                    res.send(result)
+                })
+            }
+        }
+    })
 })
+
+//주문 내역 가져오기
+app.get('/api/getOrderList', (req, res) => {
+    const userid = req.query.userid
+    const orderlist = "SELECT orderID, DATE_FORMAT(orderDate, '%Y-%m-%d %p %h:%i') as 'orderDate', address, phonenumber, finalPrice FROM `order` WHERE CusID = ?"
+
+    db.query(orderlist, userid, (err, result) => {
+        if (err) {
+            console.log("error : ", err)
+        }
+        res.send(result)
+
+    })
+});
+
+//주문 상세 내역
 
 app.get('/', function(req, res){
     res.send('Hello World');
