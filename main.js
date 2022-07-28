@@ -117,31 +117,6 @@ app.get("/api/detail", (req, res) => {
     })
 })
 
-//원래 주문
-// app.get("/api/order", (req, res) => {
-//     const id = req.query.productID;
-//     db.query("SELECT * FROM product WHERE productID in (" + id.toString() + ")", (err, result) => {
-//         res.send(result)
-//     })
-// });
-
-//주문 - 디테일에서 들어온 경우 (detailorder)
-// app.get("/api/detailorder", (req, res) => {
-//     const id = req.query.productID;
-//     db.query("SELECT * FROM product WHERE productID = ?", id, (err, result) => {
-//         res.send(result)
-//     })
-// });
-
-//주문 - 장바구니에서 들어온 경우 (cartorder)
-// app.get("/api/cartorder", (req, res) => {
-//     const id = req.query.userid;
-//     db.query("SELECT * FROM cart WHERE userid = ?", id, (err, result) => {
-//         res.send(result)
-//     })
-// });
-
-
 //장바구니 넣기
 app.post("/api/insertCart", (req, res) => {
     const productid = req.body.productID;
@@ -256,6 +231,16 @@ app.get('/api/getOrderList', (req, res) => {
 });
 
 //주문 상세 내역
+app.get('/api/orderDetailList', (req, res) => {
+    const orderID = req.query.orderID
+    const detailquery = `select o.orderID, p.productIMG, p.productName, o.orderQuantity, p.productPrice  from orderDetails o inner join product p on o.productID = p.productID where o.orderID = ${orderID}`;
+    db.query(detailquery, (err, result) => {
+        if (err) {
+            console.log("error : ", err)
+        }
+        res.send(result);
+    })
+});
 
 app.get('/', function(req, res){
     res.send('Hello World');
