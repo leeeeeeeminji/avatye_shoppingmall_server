@@ -5,9 +5,25 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const secret = require('./jwt.js')
+const multer = require('multer')
+const path = require('path')
 
 //connect.js의 연결 정보 불러오기
 const db = require('./connect.js')
+
+const storage = multer.diskStorage({
+    destination : function(req, file, cb) {
+        cb("../")
+    },
+    filename : function(req, file, cb) {
+        const ext = path.extname(file.originalname);
+        cb(null, path.basename(file.originalname, ext) + "_" + Date.now() + ext);
+    },
+});
+
+const upload = multer({
+    storage : storage
+})
 
 
 app.use(cors())
@@ -241,6 +257,16 @@ app.get('/api/orderDetailList', (req, res) => {
         res.send(result);
     })
 });
+
+//
+app.post('/api/saveImage', upload.single('img'),async(req, res) => {
+    const image= req.file.path;
+    console.log(req.file);
+    if(image === undefined){
+        return res.send("이미지없음")
+    }
+    res.send("성공! ><");
+})
 
 app.get('/', function(req, res){
     res.send('Hello World');
