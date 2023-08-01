@@ -5,7 +5,9 @@
 ##  📘 프로그램 및 기능 소개
 #### 프로그램 소개
 <p>
-  react와 node.js를 사용하여 제작한 쇼핑몰입니다.
+  react와 node.js를 사용하여 제작한 쇼핑몰입니다.<br>
+  쇼핑몰 프론트 코드<br>
+  https://github.com/leeeeeeeminji/avatye_shoppingmall_front
 </p>
 <br>
 
