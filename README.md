@@ -9,7 +9,6 @@
   <b>쇼핑몰 프론트 코드</b><br>
   https://github.com/leeeeeeeminji/avatye_shoppingmall_front
 </p>
-<br>
 
 #### 기능 소개
 - ##### 로그인 X
